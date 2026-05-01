@@ -1,12 +1,18 @@
 """ This script discovers Kasa devices on the local network and prints their details. """
 
-import asyncio
 import warnings
-
-from kasa import Discover
-
 # Suppress warnings about unclosed client sessions and connectors
-warnings.filterwarnings("ignore", category=ResourceWarning)
+warnings.filterwarnings("ignore")
+def no_warning(*args, **kwargs):
+    pass
+warnings.showwarning = no_warning
+
+import logging
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
+logging.getLogger("aiohttp.client").setLevel(logging.CRITICAL)
+
+import asyncio
+from kasa import Discover
 
 
 
