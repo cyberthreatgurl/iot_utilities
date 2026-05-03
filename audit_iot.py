@@ -146,7 +146,7 @@ async def main(target=None):
     try:
         with open("macs.json", "r") as f:
             macs_data = json.load(f)
-            tapo_kasa_ouis = [mac.strip().upper() for mac in macs_data[0].get("macs", [])]
+            tapo_kasa_ouis = [mac.strip().upper() for mac in macs_data[0].get("kasa_macs", [])]
     except Exception as e:
         print(f"Error loading macs.json: {e}")
         tapo_kasa_ouis = []

@@ -48,7 +48,7 @@ def get_kasa_macs():
             # Use json.load() to deserialize the JSON data into a Python dictionary
             data = json.load(file)
             # Extract the macs array from the nested structure
-            macs = data[0]["macs"]
+            macs = data[0]["kasa_macs"]
             return macs
     except FileNotFoundError:
         print("Error: The file 'macs.json' was not found.")

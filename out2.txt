@@ -1,7 +1,0 @@
-Traceback (most recent call last):
-  File "<string>", line 1, in <module>
-    import warnings; warnings.simplefilter('ignore'); import KasaUtil; import asyncio; asyncio.run(KasaUtil.main())
-                                                      ^^^^^^^^^^^^^^^
-  File "/Users/ashaw/code/kasa/KasaUtil.py", line 6, in <module>
-    from kasa import Discover
-ModuleNotFoundError: No module named 'kasa'
