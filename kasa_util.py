@@ -40,7 +40,6 @@ def query_home_assistant_api(api_key):
         print("Devices from Home Assistant API:")
         for device in devices:
             print(device)
-            
     except requests.RequestException as e:
         print(f"Error querying Home Assistant API: {e}")
 
@@ -69,4 +68,4 @@ if __name__ == "__main__":
         exit(1)
 
     asyncio.run(main())
-    query_home_assistant_api(api_key)
+    #query_home_assistant_api(api_key)
