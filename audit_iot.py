@@ -115,7 +115,9 @@ async def main(target=None):
     # Configuration
     ha_base_url = "http://10.0.0.100:8123"
     api_key = os.getenv("HA_API_KEY")
-
+    kasa_username = os.getenv("KASA_USERNAME")
+    kasa_password = os.getenv("KASA_PASSWORD")
+    
     if target:
         target = target.strip().upper()
         print(f"Auditing specific target: {target}")
@@ -124,12 +126,16 @@ async def main(target=None):
         print("Error: HA_API_KEY not found in environment variables.")
         exit(1)
 
+    if not kasa_username or not kasa_password:
+        print("Error: KASA_USERNAME or KASA_PASSWORD not found in environment variables.")
+        exit(1)
+
     # 1. Get the Map from Home Assistant
     ha_mac_map = get_ha_device_map(ha_base_url, api_key)
 
     print("\nScanning local network for Kasa devices...")
     # 2. Discover Kasa Devices
-    devices = await Discover.discover(username="kaver68@gmail.com", password="tl@hPQV6zjJYN87#", timeout=3)
+    devices = await Discover.discover(username=kasa_username, password=kasa_password, timeout=3)
     
     sorted_devices = sorted(
         devices.values(), 
@@ -164,7 +170,8 @@ async def main(target=None):
         # Check OUI prefix (first 8 characters like 'AA:BB:CC')
         if tapo_kasa_ouis and oui not in tapo_kasa_ouis:
             status = "\033[93mSKIPPED (OUI)\033[0m"
-            output_rows.append({"oui": oui, "ip": dev.host, "mac": dev_mac, "status": status, "display": "N/A"})
+            manufacturer = oui_db.get(oui, "Unknown Manufacturer")
+            output_rows.append({"manufacturer": manufacturer, "oui": oui, "ip": dev.host, "mac": dev_mac, "status": status, "display": "N/A"})
             continue
 
         try:
@@ -179,11 +186,15 @@ async def main(target=None):
                 
             status = "\033[91mUNLINKED (KASA)\033[0m"
             entity_display = f"\033[93m{dev.alias}\033[0m"
+            manufacturer = oui_db.get(oui, "Unknown Manufacturer")
 
-            output_rows.append({"oui": oui, "ip": dev.host, "mac": dev_mac, "status": status, "display": entity_display})
+            output_rows.append({"manufacturer": manufacturer, "oui": oui, "ip": dev.host, "mac": dev_mac, "status": status, "display": entity_display})
 
         except (KasaException, asyncio.TimeoutError, OSError) as e:
-            print(f"Error querying {dev.host}: {e}")
+            status = "\033[91mNON-COM\033[0m"
+            manufacturer = oui_db.get(oui, "Unknown Manufacturer")
+            entity_display = f"\033[36m{manufacturer}\033[0m"
+            output_rows.append({"manufacturer": manufacturer, "oui": oui, "ip": dev.host, "mac": dev_mac, "status": status, "display": entity_display})
 
     # Now iterate the rest of the ARP table
     for mac, ip in arp_devices.items():
@@ -205,20 +216,20 @@ async def main(target=None):
         manufacturer = oui_db.get(oui_prefix, "Unknown Manufacturer")
         entity_display = f"\033[36m{manufacturer}\033[0m"
 
-        output_rows.append({"oui": oui_prefix, "ip": ip, "mac": mac, "status": status, "display": entity_display})
+        output_rows.append({"manufacturer": manufacturer, "oui": oui_prefix, "ip": ip, "mac": mac, "status": status, "display": entity_display})
 
-    # Sort the rows by OUI prefix first, then by full MAC address
-    output_rows.sort(key=lambda x: (x["oui"], x["mac"]))
+    # Sort the rows by manufacturer first, then by full MAC address
+    output_rows.sort(key=lambda x: (x["manufacturer"], x["mac"]))
 
     print(f"\n{'IP Address':<16} | {'MAC Address':<18} | {'Status':<19} | {'HA Entity / Manufacturer Info'}")
     print("-" * 85)
 
-    last_oui = None
+    last_manuf = None
     for row in output_rows:
-        # Print a blank line between different OUI groups
-        if last_oui is not None and row["oui"] != last_oui:
+        # Print a blank line between different manufacturer groups
+        if last_manuf is not None and row["manufacturer"] != last_manuf:
             print("")
-        last_oui = row["oui"]
+        last_manuf = row["manufacturer"]
         
         print(f"{row['ip']:<16} | {row['mac']:<18} | {row['status']:<28} | {row['display']}")
 
