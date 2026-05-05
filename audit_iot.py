@@ -134,6 +134,7 @@ async def main(target=None):
     ha_mac_map = get_ha_device_map(ha_base_url, api_key)
 
     print("\nScanning local network for Kasa devices...")
+    
     # 2. Discover Kasa Devices
     devices = await Discover.discover(username=kasa_username, password=kasa_password, timeout=3)
     
